@@ -117,7 +117,7 @@ function sbj_save_post( $post_id, $post ) {
 	/**
 	 * Only trigger this if the post is actually saved
 	 */
-	if ( isset( $post->post_status ) && 'auto-draft' === $post->post_status ) {
+	if ( isset( $post->post_status ) && ( 'auto-draft' === $post->post_status || 'inherit' === $post->post_status ) ) {
 		return;
 	}
 
