@@ -28,7 +28,7 @@ define( 'SBJ_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SBJ_LOG_PATH', trailingslashit( SBJ_PLUGIN_PATH ) . 'sbj.log.' . date( 'y-m-d' ) . '.log' );
 
 function sbj_debug( $data ) {
-	$file = SSP_LOG_PATH;
+	$file = SBJ_LOG_PATH;
 	if ( ! is_file( $file ) ) {
 		file_put_contents( $file, '' );
 	}
@@ -43,6 +43,9 @@ function sbj_debug( $data ) {
 add_action( 'admin_init', 'sbj_settings_api_init' );
 
 function sbj_settings_api_init() {
+
+	sbj_debug( 'Settings API init' );
+
 	// Add the section to reading settings so we can add our
 	// fields to it
 	add_settings_section(
@@ -103,25 +106,31 @@ function sbj_settings_api_token_callback_function(){
 	echo '<input name="sbj_settings_api_token" id="sbj_settings_api_token" type="text" value="' . get_option( 'sbj_settings_api_token' ) . '" class="code"/> Enter the api key';
 }
 
-add_action( 'save_post', 'sbj_save_post', 11, 2 );
+if ( is_admin() ) {
+	add_action( 'save_post', 'sbj_save_post', 10, 2 );
+	add_action( 'post_updated', 'sbj_save_post', 10, 2 );
+}
 
 function sbj_save_post( $post_id, $post ) {
 
+	sbj_debug( 'Save Post' );
 	/**
 	 * Only trigger this if the post is actually saved
 	 */
-	if ( isset( $post->post_status ) && 'auto-draft' == $post->post_status ) {
+	if ( isset( $post->post_status ) && 'auto-draft' === $post->post_status ) {
 		return;
 	}
 
 	/**
 	 * Don't trigger this when the post is trashed
 	 */
-	if ( 'trash' == $post->post_status ) {
+	if ( 'trash' === $post->post_status ) {
 		return;
 	}
 
-	$api_url = '192.168.10.10/api/posts';
+	sbj_debug( 'Ready to save post' );
+
+	$api_url = 'http://192.168.10.10/api/posts';
 
 	$api_token = get_option( 'sbj_settings_api_token', '' );
 
@@ -137,7 +146,9 @@ function sbj_save_post( $post_id, $post ) {
 
 	sbj_debug( $post_body );
 
-	$app_response = wp_remote_post( $api_url, array(
+	$app_response = wp_remote_post(
+		$api_url,
+		array(
 			'timeout' => 45,
 			'body'    => $post_body,
 		)
@@ -163,7 +174,7 @@ function sbj_save_post( $post_id, $post ) {
 		if ( isset( $response_object->message ) ) {
 			sbj_debug( 'Post wasn\'t added with message ' . $response_object->message );
 		} else {
-			sbj_debug( 'Post wasn\'t added with unkown reason' );
+			sbj_debug( 'Post wasn\'t added with unknown reason' );
 		}
 
 		return;
