@@ -21,6 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+function sbj_debug( $data ) {
+	print_r( $data );
+}
+
 // ------------------------------------------------------------------
 // Add all your sections, fields and settings during admin_init
 // ------------------------------------------------------------------
@@ -86,4 +90,67 @@ function sbj_settings_email_callback_function() {
 
 function sbj_settings_api_token_callback_function(){
 	echo '<input name="sbj_settings_api_token" id="sbj_settings_api_token" type="text" value="' . get_option( 'sbj_settings_api_token' ) . '" class="code"/> Enter the api key';
+}
+
+add_action( 'save_post', 'sbj_save_post', 11, 2 );
+
+function sbj_save_post( $post_id, $post ) {
+
+	/**
+	 * Only trigger this if the post is actually saved
+	 */
+	if ( isset( $post->post_status ) && 'auto-draft' == $post->post_status ) {
+		return;
+	}
+
+	/**
+	 * Don't trigger this when the post is trashed
+	 */
+	if ( 'trash' == $post->post_status ) {
+		return;
+	}
+
+	$api_url = '192.168.10.10/api/posts';
+
+	$api_token = get_option( 'sbj_settings_api_token', '' );
+
+	sbj_debug( $api_token );
+
+	$post_body = array(
+		'api_token'    => $api_token,
+		'post_id'      => $post->ID,
+		'post_title'   => $post->post_title,
+		'post_content' => $post->post_content,
+
+	);
+
+	sbj_debug( $post_body );
+
+	$app_response = wp_remote_post( $api_url, array(
+			'timeout' => 45,
+			'body'    => $post_body,
+		)
+	);
+
+	sbj_debug( $app_response );
+
+	if ( ! is_wp_error( $app_response ) ) {
+		$response_object = json_decode( wp_remote_retrieve_body( $app_response ) );
+		if ( ! empty( $response_object ) ) {
+			if ( 'success' === $response_object->status ) {
+				// post was successfully added
+			} else {
+				if ( isset( $response_object->message ) ) {
+					// post wasn't added, but with a reason we're aware of
+				} else {
+					// post wasnt added, but for an unknown reason
+				}
+			}
+		} else {
+			// empty response object
+		}
+	} else {
+		// wp_error
+	}
+
 }
