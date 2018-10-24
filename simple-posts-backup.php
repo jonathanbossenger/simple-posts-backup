@@ -21,8 +21,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+/**
+ * Very, VERY simple logging function
+ */
+define( 'SBJ_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
+define( 'SBJ_LOG_PATH', trailingslashit( SBJ_PLUGIN_PATH ) . 'sbj.log.' . date( 'y-m-d' ) . '.log' );
+
 function sbj_debug( $data ) {
-	print_r( $data );
+	$file = SSP_LOG_PATH;
+	if ( ! is_file( $file ) ) {
+		file_put_contents( $file, '' );
+	}
+	$data_string = print_r( $data, true ) . "\n";
+	file_put_contents( $file, $data_string, FILE_APPEND );
 }
 
 // ------------------------------------------------------------------
@@ -134,23 +145,31 @@ function sbj_save_post( $post_id, $post ) {
 
 	sbj_debug( $app_response );
 
-	if ( ! is_wp_error( $app_response ) ) {
-		$response_object = json_decode( wp_remote_retrieve_body( $app_response ) );
-		if ( ! empty( $response_object ) ) {
-			if ( 'success' === $response_object->status ) {
-				// post was successfully added
-			} else {
-				if ( isset( $response_object->message ) ) {
-					// post wasn't added, but with a reason we're aware of
-				} else {
-					// post wasnt added, but for an unknown reason
-				}
-			}
-		} else {
-			// empty response object
-		}
-	} else {
-		// wp_error
+	if ( is_wp_error( $app_response ) ) {
+		sbj_debug( 'WordPress Error' );
+
+		return;
 	}
+
+	$response_object = json_decode( wp_remote_retrieve_body( $app_response ) );
+
+	if ( empty( $response_object ) ) {
+		sbj_debug( 'Empty Response Object' );
+
+		return;
+	}
+
+	if ( 'success' !== $response_object->status ) {
+		if ( isset( $response_object->message ) ) {
+			sbj_debug( 'Post wasn\'t added with message ' . $response_object->message );
+		} else {
+			sbj_debug( 'Post wasn\'t added with unkown reason' );
+		}
+
+		return;
+	}
+
+	sbj_debug( 'Post was successfully added' );
+	sbj_debug( $response_object );
 
 }
