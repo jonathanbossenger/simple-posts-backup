@@ -1,6 +1,6 @@
 === Simple Posts Backup ===
 Contributors: jonathanbossenger
-Donate link: http://www.psykrotek.co.za/donate
+Donate link: https://jonathanbossenger.com/buy-me-a-coffee/
 Tags: wordpress, plugin, template
 Requires at least: 3.9
 Tested up to: 4.0

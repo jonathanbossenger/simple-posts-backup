@@ -1,2 +1,2 @@
 # simple-posts-backup
-Plugin example for WordCamp Johannesburg 2018 Workshop
+Plugin example used for Laravel Workshop examples
