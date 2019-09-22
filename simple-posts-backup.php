@@ -26,6 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 define( 'SBJ_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 define( 'SBJ_LOG_PATH', trailingslashit( SBJ_PLUGIN_PATH ) . 'sbj.log.' . date( 'y-m-d' ) . '.log' );
+define( 'SBJ_API_URL', 'http://192.168.10.10' );
 
 function sbj_debug( $data ) {
 	$file = SBJ_LOG_PATH;
@@ -130,7 +131,7 @@ function sbj_save_post( $post_id, $post ) {
 
 	sbj_debug( 'Ready to save post' );
 
-	$api_url = 'http://192.168.10.10/api/posts';
+	$api_url = SBJ_API_URL . '/api/posts';
 
 	$api_token = get_option( 'sbj_settings_api_token', '' );
 
@@ -141,7 +142,6 @@ function sbj_save_post( $post_id, $post ) {
 		'post_id'      => $post->ID,
 		'post_title'   => $post->post_title,
 		'post_content' => $post->post_content,
-
 	);
 
 	sbj_debug( $post_body );
